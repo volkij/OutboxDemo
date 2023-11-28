@@ -32,43 +32,7 @@ public sealed class RabbitPublisher<T> : RabbitClient, IOutboxPublisher<T>, IDis
     {
         base.OnConnected();
         SendMessagesFromQueue();
-    }
-
-    public void PublishOLD(T message)
-    {
-        Logger.LogInformation("Sending message to RabbitMQ. Messages in queue: {count}", _queue.Count());
-        
-        if (!IsConnected)
-        {
-            _queue.Enqueue(message);
-            ProcessFailedConnection();
-            return;
-        }
-
-        try
-        {
-            IBasicProperties properties = GetMessageProperties(message);
-
-            string json = JsonSerializer.Serialize(message);
-            var body = Encoding.UTF8.GetBytes(json);
-
-            Channel.BasicPublish(exchange: RabbitConfiguration.ExchangeName,
-                routingKey: RabbitConfiguration.RoutingKey,
-                basicProperties: properties,
-                body: body);
-
-            OnMessageSent(message);
-            Logger.LogInformation($"Sent to RabbitMQ - Message.ID : {message.ID}");
-            Logger.LogDebug(json);
-        }
-        catch (Exception ex)
-        {
-            _queue.Enqueue(message);
-            Logger.LogError(ex, "An error occurred while sending a message to RabbitMQ.");
-            ProcessFailedConnection(ex);
-        }
-    }
-    
+    }       
     public void Publish(T message)
     {
         Logger.LogInformation("Sending message to RabbitMQ. Messages in queue: {count}", _queue.Count());
